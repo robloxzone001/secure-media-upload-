@@ -1,0 +1,11 @@
+# Node modules folder ignore kare
+node_modules/
+
+# Environment variables
+.env
+
+# Mac users ke liye unnecessary files
+.DS_Store
+
+# Agar aur koi temp folder hai
+/temp/
