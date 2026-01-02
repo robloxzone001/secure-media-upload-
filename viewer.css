@@ -1,0 +1,60 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+body {
+  background: radial-gradient(circle at top, #111 0%, #000 70%);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: system-ui, sans-serif;
+  color: #fff;
+}
+
+.viewer-container {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  animation: fadeIn 0.6s ease;
+}
+
+canvas, video {
+  max-width: 100%;
+  max-height: 80vh;
+  border-radius: 14px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.8);
+}
+
+.timer-ring {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  backdrop-filter: blur(10px);
+}
+
+.expired {
+  font-size: 18px;
+  opacity: 0.7;
+  text-align: center;
+}
+
+.hidden {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
