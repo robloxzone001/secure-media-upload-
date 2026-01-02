@@ -17,8 +17,15 @@ app.use(express.static(__dirname + "/public")); // frontend files
 
 /* ---------- Root Route ---------- */
 app.get("/", (req, res) => {
-  res.sendFile(__dirname, "public/index.html"); // render frontend on root
+  res.sendFile(path.join(__dirname, "public/index.html")); // render frontend on root
 });
+
+
+// expired page
+app.get("/expired", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "expired.html"));
+});
+
 
 /* ---------- Cloudinary Config ---------- */
 cloudinary.config({
