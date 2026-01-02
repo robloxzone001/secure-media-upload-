@@ -17,7 +17,7 @@ app.use(express.static(__dirname + "/public")); // frontend files
 
 /* ---------- Root Route ---------- */
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public/index.html")); // render frontend on root
+  res.sendFile(path.join(__dirname, "public", "index.html")); // render frontend on root
 });
 
 
