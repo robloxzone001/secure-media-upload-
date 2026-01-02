@@ -5,6 +5,7 @@ const cors = require("cors");
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 const crypto = require("crypto");
+const path = require("path");
 
 const app = express();
 
@@ -12,11 +13,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static("public"));
+app.use(express.static("public")); // frontend files
 
-/* ---------- Root Route (IMPORTANT) ---------- */
+/* ---------- Root Route ---------- */
 app.get("/", (req, res) => {
-  res.send("Server is running 🚀");
+  res.sendFile(path.join(__dirname, "public/index.html")); // render frontend on root
 });
 
 /* ---------- Cloudinary Config ---------- */
@@ -39,33 +40,28 @@ const mediaSchema = new mongoose.Schema({
   viewed: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now, expires: 3600 },
 });
-
 const Media = mongoose.model("Media", mediaSchema);
 
-/* ---------- Token Generator (NO nanoid) ---------- */
+/* ---------- Token Generator ---------- */
 function generateToken(length = 8) {
   return crypto.randomBytes(16).toString("hex").slice(0, length);
 }
 
-/* ---------- Multer (Memory) ---------- */
+/* ---------- Multer ---------- */
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 /* ---------- Upload Route ---------- */
 app.post("/upload", upload.single("file"), async (req, res) => {
-  if (!req.file) {
+  if (!req.file)
     return res.status(400).json({ success: false, message: "No file uploaded" });
-  }
 
   try {
     const uploadStream = () =>
       new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           { resource_type: "auto" },
-          (error, result) => {
-            if (result) resolve(result);
-            else reject(error);
-          }
+          (err, result) => (err ? reject(err) : resolve(result))
         );
         stream.end(req.file.buffer);
       });
@@ -73,14 +69,11 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     const result = await uploadStream();
     const token = generateToken(8);
 
-    await Media.create({
-      token,
-      mediaUrl: result.secure_url,
-    });
+    await Media.create({ token, mediaUrl: result.secure_url });
 
     res.json({
       success: true,
-      link: `${process.env.BASE_URL}/view/${token}`,
+      link: `${process.env.BASE_URL}/view/${token}`, // single slash
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -90,16 +83,13 @@ app.post("/upload", upload.single("file"), async (req, res) => {
 /* ---------- View Route ---------- */
 app.get("/view/:token", async (req, res) => {
   const media = await Media.findOne({ token: req.params.token });
-
-  if (!media || media.viewed) {
-    return res.sendFile(__dirname + "/public/expired.html");
-  }
+  if (!media || media.viewed) return res.sendFile(path.join(__dirname, "public/expired.html"));
 
   res.send(`
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>Secure View</title>
 <style>
 body{margin:0;background:#000;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh}
@@ -109,17 +99,17 @@ img{max-width:90%;border-radius:10px}
 <body>
 <img id="media" src="${media.mediaUrl}" />
 <script>
-let t = 5;
-const img = document.getElementById("media");
-img.onload = () => {
-  const timer = setInterval(() => {
+let t=5;
+const img=document.getElementById("media");
+img.onload=()=>{
+  const timer=setInterval(()=>{
     t--;
-    if (t <= 0) {
+    if(t<=0){
       clearInterval(timer);
-      fetch("/expire/${media.token}", { method: "POST" })
-        .then(() => document.body.innerHTML = "<h2 style='color:red'>❌ Link Expired</h2>");
+      fetch("/expire/${media.token}",{method:"POST"})
+        .then(()=>document.body.innerHTML="<h2 style='color:red'>❌ Link Expired</h2>");
     }
-  }, 1000);
+  },1000);
 };
 </script>
 </body>
@@ -136,5 +126,5 @@ app.post("/expire/:token", async (req, res) => {
 /* ---------- Server ---------- */
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () =>
-  console.log("Server running on port", PORT)
+  console.log(`Server running on port ${PORT} 🚀`)
 );
